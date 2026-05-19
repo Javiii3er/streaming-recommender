@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchMovieById } from '../services/recommendations.api';
 import { Movie } from '../types';
+import StarRating from '../components/StarRating';
 
 const genreColors: Record<string, string> = {
   Action:    'bg-orange-900/50 text-orange-300',
@@ -130,26 +131,36 @@ export default function MovieDetail() {
               </p>
             )}
 
-            {/* Rating promedio */}
-            <div className="flex items-center gap-3 pt-2">
-              <div className="bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 flex items-center gap-2">
-                <span className="text-yellow-400 text-lg">★</span>
-                <div>
-                  <p className="text-white font-display font-bold text-lg leading-none">
-                    {Number((movie as any).avg_rating || 0).toFixed(1)}
-                  </p>
-                  <p className="text-neutral-500 text-xs">
-                    {(movie as any).rating_count || 0} valoraciones
-                  </p>
+            {/* Rating promedio + estrellas */}
+            <div className="flex flex-col gap-4 pt-2">
+              <div className="flex items-center gap-3">
+                <div className="bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 flex items-center gap-2">
+                  <span className="text-yellow-400 text-lg">★</span>
+                  <div>
+                    <p className="text-white font-display font-bold text-lg leading-none">
+                      {Number((movie as any).avg_rating || 0).toFixed(1)}
+                    </p>
+                    <p className="text-neutral-500 text-xs">
+                      {(movie as any).rating_count || 0} valoraciones
+                    </p>
+                  </div>
                 </div>
+
+                <button
+                  onClick={() => navigate('/')}
+                  className="btn-primary text-sm"
+                >
+                  ✦ Ver más recomendaciones
+                </button>
               </div>
 
-              <button
-                onClick={() => navigate('/')}
-                className="btn-primary text-sm"
-              >
-                ✦ Ver más recomendaciones
-              </button>
+              {/* Sistema de rating con estrellas */}
+              <div className="bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3">
+                <StarRating
+                  movieId={movie.id}
+                  initialRating={Math.round((movie as any).avg_rating || 0)}
+                />
+              </div>
             </div>
           </div>
         </div>

@@ -138,3 +138,32 @@ export async function searchTMDB(req: Request, res: Response): Promise<void> {
     res.status(500).json({ success: false, error: 'Error al buscar películas.' });
   }
 }
+
+// POST /api/ratings
+export async function addRating(req: Request, res: Response): Promise<void> {
+  try {
+    const { movieId, rating, userId } = req.body;
+
+    if (!movieId || !rating || rating < 0.5 || rating > 5) {
+      res.status(400).json({ success: false, error: 'Datos de rating inválidos.' });
+      return;
+    }
+
+    const pool = (await import('../db/db')).default;
+
+    // Si hay userId, guarda en BD. Si no, solo devuelve éxito
+    if (userId) {
+      await pool.query(
+        `INSERT INTO ratings (user_id, movie_id, rating) 
+         VALUES (?, ?, ?) 
+         ON DUPLICATE KEY UPDATE rating = ?`,
+        [userId, movieId, rating, rating]
+      );
+    }
+
+    res.json({ success: true, message: 'Rating guardado correctamente.' });
+  } catch (error) {
+    console.error('Error en addRating:', error);
+    res.status(500).json({ success: false, error: 'Error al guardar el rating.' });
+  }
+}
