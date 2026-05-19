@@ -75,3 +75,66 @@ export async function getGenres(req: Request, res: Response): Promise<void> {
     res.status(500).json({ success: false, error: 'Error al obtener géneros.' });
   }
 }
+
+// GET /api/movies/:id
+// Devuelve los detalles de una película específica por su ID junto con su puntuación media
+export async function getMovieById(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    const pool = (await import('../db/db')).default;
+    
+    const [rows] = await pool.query<any[]>(
+      `SELECT m.*, 
+        COALESCE(AVG(r.rating), 0) as avg_rating,
+        COUNT(r.id) as rating_count
+       FROM movies m
+       LEFT JOIN ratings r ON m.id = r.movie_id
+       WHERE m.id = ?
+       GROUP BY m.id`,
+      [id]
+    );
+
+    if (!rows.length) {
+      res.status(404).json({ success: false, error: 'Película no encontrada.' });
+      return;
+    }
+
+    res.json({ success: true, data: rows[0] });
+  } catch (error) {
+    console.error('Error en getMovieById:', error);
+    res.status(500).json({ success: false, error: 'Error al obtener la película.' });
+  }
+}
+
+// GET /api/search?q=matrix
+export async function searchTMDB(req: Request, res: Response): Promise<void> {
+  try {
+    const { q } = req.query;
+    if (!q || typeof q !== 'string') {
+      res.status(400).json({ success: false, error: 'Parámetro de búsqueda requerido.' });
+      return;
+    }
+
+    const { env } = await import('../config/env');
+    const query = encodeURIComponent(q);
+    const url = `https://api.themoviedb.org/3/search/movie?api_key=${env.tmdbKey}&query=${query}&language=es-ES&page=1`;
+
+    const response = await fetch(url);
+    const data = await response.json() as any;
+
+    const movies = data.results?.slice(0, 12).map((m: any) => ({
+      id: m.id,
+      title: m.title,
+      year: m.release_date ? new Date(m.release_date).getFullYear() : null,
+      image_url: m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : null,
+      description: m.overview || null,
+      genres: '',
+      score: m.vote_average / 10,
+    })) || [];
+
+    res.json({ success: true, data: movies });
+  } catch (error) {
+    console.error('Error en searchTMDB:', error);
+    res.status(500).json({ success: false, error: 'Error al buscar películas.' });
+  }
+}

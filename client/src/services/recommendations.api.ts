@@ -1,5 +1,5 @@
 import { http } from './http';
-import { ApiResponse, RecommendedMovie, RecommendationRequest } from '../types';
+import { ApiResponse, Movie, RecommendedMovie, RecommendationRequest } from '../types';
 
 // Obtiene géneros disponibles desde el backend
 export async function fetchGenres(): Promise<string[]> {
@@ -16,4 +16,9 @@ export async function fetchRecommendations(
     payload
   );
   return res.data || [];
+}
+
+export async function fetchMovieById(id: number): Promise<Movie> {
+  const res = await http.get<ApiResponse<Movie>>(`/movies/${id}`);
+  return res.data!;
 }

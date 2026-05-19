@@ -19,14 +19,21 @@ const genreColors: Record<string, string> = {
   Fantasy:   'bg-indigo-900/50 text-indigo-300',
 };
 
-export default function MovieCard({ movie, index }: Props) {
+interface Props {
+  movie: RecommendedMovie;
+  index: number;
+  onClick?: () => void;
+}
+
+export default function MovieCard({ movie, index, onClick }: Props) {
   const genres = movie.genres.split('|').slice(0, 3); // Máximo 3 géneros
   const scorePercent = Math.round(movie.score * 100);
 
   return (
     <div
-      className="card animate-fade-up"
+      className="card animate-fade-up cursor-pointer"
       style={{ animationDelay: `${index * 80}ms` }}
+      onClick={onClick}
     >
       {/* Header de la card — imagen o fallback */}
       <div className="relative h-40 bg-gradient-to-br from-neutral-800 to-neutral-900 flex items-center justify-center">
