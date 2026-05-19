@@ -1,11 +1,11 @@
-# 🎬 StreamMatch — Sistema de Recomendación Personalizado con IA
+#  StreamMatch — Sistema de Recomendación Personalizado con IA
 
 Proyecto final — Administración de Tecnologías de la Información  
 Stack: React + Vite + TypeScript + Tailwind | Node.js + Express + TypeScript + MySQL
 
 ---
 
-## 📁 Estructura del Repositorio
+##  Estructura del Repositorio
 
 ```
 streaming-recommender/
@@ -16,7 +16,7 @@ streaming-recommender/
 
 ---
 
-## 🚀 Cómo iniciar el proyecto
+##  Cómo iniciar el proyecto
 
 ### Requisitos previos
 - Node.js v18 o superior
@@ -76,7 +76,7 @@ La app corre en: `http://localhost:5173`
 
 ---
 
-## 🗂️ Plan de desarrollo (19–30 mayo)
+##  Plan de desarrollo (19–30 mayo)
 
 | Días | Tarea |
 |------|-------|
@@ -91,19 +91,19 @@ La app corre en: `http://localhost:5173`
 
 ---
 
-## 👥 Equipo
+##  Equipo
 
 | Nombre | Rol |
 |--------|-----|
-| TU_NOMBRE | Desarrollo (Backend + Frontend) |
-| COMPAÑERO | Desarrollo (apoyo) |
-| COMPAÑERA 1 | Documentación |
-| COMPAÑERA 2 | Documentación |
-| COMPAÑERA 3 | Documentación |
+| Javier Jose Luis Rivera Pérez | Desarrollo (Backend + Frontend) |
+| Marvin Alexander Vásquez López| Desarrollo (Backend + Frontend) |
+| Karla Waleska Rodríguez Arévalo| Documentación |
+| Jaqueline Natalia Lorenzana León| Documentación |
+| Gelen Dayanna López Morales | Documentación |
 
 ---
 
-## 📌 Variables de entorno necesarias
+##  Variables de entorno necesarias
 
 ### Server (.env)
 ```
