@@ -11,5 +11,6 @@ export const env = {
     name: process.env.DB_NAME || 'streamingdb',
   },
   anthropicKey: process.env.ANTHROPIC_API_KEY || '',
+  tmdbKey: process.env.TMDB_API_KEY || '',
   clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
 };
