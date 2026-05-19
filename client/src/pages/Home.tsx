@@ -30,6 +30,8 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [hasSearched, setHasSearched] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 12;
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -59,6 +61,7 @@ export default function Home() {
         userName: userName || undefined,
       });
       setRecommendations(results);
+      setCurrentPage(1);
     } catch {
       setError('Error al obtener recomendaciones. Intenta de nuevo.');
     } finally {
@@ -223,15 +226,55 @@ export default function Home() {
 
             {/* Grid de películas */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {recommendations.map((movie, i) => (
-                <MovieCard
-                  key={movie.id}
-                  movie={movie}
-                  index={i}
-                  onClick={() => navigate(`/pelicula/${movie.id}`)}
-                />
-              ))}
+              {recommendations
+                .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+                .map((movie, i) => (
+                  <MovieCard
+                    key={movie.id}
+                    movie={movie}
+                    index={i}
+                    onClick={() => navigate(`/pelicula/${movie.id}`)}
+                  />
+                ))}
             </div>
+
+            {/* Paginación */}
+            {recommendations.length > ITEMS_PER_PAGE && (
+              <div className="flex items-center justify-center gap-4 pt-4">
+                <button
+                  onClick={() => {
+                    setCurrentPage((p) => Math.max(1, p - 1));
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  disabled={currentPage === 1}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-neutral-700
+                             text-neutral-400 hover:border-brand-500 hover:text-brand-500
+                             disabled:opacity-30 disabled:cursor-not-allowed transition-all font-display text-sm"
+                >
+                  ← Anterior
+                </button>
+
+                <span className="text-neutral-400 font-body text-sm px-4">
+                  Página <span className="text-white font-bold">{currentPage}</span> de{' '}
+                  <span className="text-white font-bold">
+                    {Math.ceil(recommendations.length / ITEMS_PER_PAGE)}
+                  </span>
+                </span>
+
+                <button
+                  onClick={() => {
+                    setCurrentPage((p) => Math.min(Math.ceil(recommendations.length / ITEMS_PER_PAGE), p + 1));
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  disabled={currentPage === Math.ceil(recommendations.length / ITEMS_PER_PAGE)}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-neutral-700
+                             text-neutral-400 hover:border-brand-500 hover:text-brand-500
+                             disabled:opacity-30 disabled:cursor-not-allowed transition-all font-display text-sm"
+                >
+                  Siguiente →
+                </button>
+              </div>
+            )}
           </section>
         )}
       </main>

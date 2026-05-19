@@ -38,7 +38,7 @@ function cosineSimilarity(
 // Recomendación basada en géneros (para usuarios sin historial)
 export async function recommendByGenres(
   genres: string[],
-  limit = 6
+  limit = 50
 ): Promise<RecommendedMovie[]> {
   const conn = await pool.getConnection();
   try {
@@ -85,7 +85,7 @@ export async function recommendByGenres(
 export async function recommendCollaborative(
   userId: number,
   genres: string[],
-  limit = 6
+  limit = 50
 ): Promise<RecommendedMovie[]> {
   const conn = await pool.getConnection();
   try {
