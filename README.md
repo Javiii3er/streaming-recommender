@@ -44,10 +44,10 @@ cp .env.example .env
 
 Edita el archivo `.env` con tus datos de MySQL y tu API Key.
 
-Luego ejecuta el script de base de datos en MySQL Workbench:
+Luego ejecuta los scripts de base de datos en MySQL Workbench en este orden:
 ```
-server/src/db/schema.sql   ← Crea las tablas
-server/src/db/seed.sql     ← Carga datos de ejemplo (MovieLens pequeño)
+server/src/db/schema.sql        ← Crea las tablas
+server/src/db/seed-completo.sql ← Carga 214 películas con imágenes reales
 ```
 
 Inicia el servidor:
