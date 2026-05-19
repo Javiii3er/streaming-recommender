@@ -80,7 +80,7 @@ export default function ChatBot() {
 
       {/* Panel del chat */}
       {isOpen && (
-        <div className="fixed bottom-24 right-6 z-50 w-80 md:w-96 h-[500px] bg-neutral-900
+        <div className="fixed bottom-24 right-2 md:right-6 z-50 w-[calc(100vw-1rem)] md:w-96 h-[calc(100vh-8rem)] max-h-[500px] bg-neutral-900
                         border border-neutral-700 rounded-2xl shadow-2xl shadow-black/50
                         flex flex-col overflow-hidden animate-fade-up">
           
