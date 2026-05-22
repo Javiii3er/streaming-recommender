@@ -5,7 +5,9 @@ import MovieDetail from './pages/MovieDetail';
 import Explorar from './pages/Explorar';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Profile from './pages/Profile';
 import ChatBot from './components/ChatBot';
+import PrivateRoute from './components/PrivateRoute';
 
 export default function App() {
   return (
@@ -13,11 +15,23 @@ export default function App() {
       <Navbar />
       <div className="pt-16">
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/pelicula/:id" element={<MovieDetail />} />
-          <Route path="/explorar" element={<Explorar />} />
+          {/* Rutas públicas */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+
+          {/* Rutas protegidas */}
+          <Route path="/" element={
+            <PrivateRoute><Home /></PrivateRoute>
+          } />
+          <Route path="/explorar" element={
+            <PrivateRoute><Explorar /></PrivateRoute>
+          } />
+          <Route path="/pelicula/:id" element={
+            <PrivateRoute><MovieDetail /></PrivateRoute>
+          } />
+          <Route path="/perfil" element={
+            <PrivateRoute><Profile /></PrivateRoute>
+          } />
         </Routes>
       </div>
       <ChatBot />

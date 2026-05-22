@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { http } from '../services/http';
+import { useAuth } from '../context/AuthContext';
 
 interface Props {
   movieId: number;
@@ -11,6 +12,7 @@ export default function StarRating({ movieId, initialRating = 0 }: Props) {
   const [hover, setHover] = useState(0);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const { user } = useAuth();
 
   async function handleRate(value: number) {
     setRating(value);
@@ -18,7 +20,11 @@ export default function StarRating({ movieId, initialRating = 0 }: Props) {
     setSaved(false);
 
     try {
-      await http.post('/ratings', { movieId, rating: value });
+      await http.post('/ratings', {
+        movieId,
+        rating: value,
+        userId: user?.id,  // ← aquí estaba el problema
+      });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch {
@@ -40,19 +46,12 @@ export default function StarRating({ movieId, initialRating = 0 }: Props) {
             onMouseLeave={() => setHover(0)}
             className="text-3xl transition-all duration-100 hover:scale-125"
           >
-            <span
-              className={
-                star <= (hover || rating)
-                  ? 'text-yellow-400'
-                  : 'text-neutral-700'
-              }
-            >
+            <span className={star <= (hover || rating) ? 'text-yellow-400' : 'text-neutral-700'}>
               ★
             </span>
           </button>
         ))}
 
-        {/* Feedback */}
         <span className="ml-3 text-sm font-body">
           {saving && <span className="text-neutral-500">Guardando...</span>}
           {saved && <span className="text-green-400">✓ Guardado</span>}

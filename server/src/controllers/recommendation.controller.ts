@@ -167,3 +167,44 @@ export async function addRating(req: Request, res: Response): Promise<void> {
     res.status(500).json({ success: false, error: 'Error al guardar el rating.' });
   }
 }
+
+// GET /api/profile/:userId
+export async function getUserProfile(req: Request, res: Response): Promise<void> {
+  try {
+    const { userId } = req.params;
+    const pool = (await import('../db/db')).default;
+
+    // Datos del usuario
+    const [userRows] = await pool.query<any[]>(
+      'SELECT id, name, email, created_at FROM users WHERE id = ?',
+      [userId]
+    );
+
+    if (!(userRows as any[]).length) {
+      res.status(404).json({ success: false, error: 'Usuario no encontrado.' });
+      return;
+    }
+
+    // Historial de ratings con info de la película
+    const [ratings] = await pool.query<any[]>(
+      `SELECT r.rating, r.created_at, m.id as movie_id, m.title, m.genres, m.year, m.image_url
+       FROM ratings r
+       JOIN movies m ON r.movie_id = m.id
+       WHERE r.user_id = ?
+       ORDER BY r.created_at DESC`,
+      [userId]
+    );
+
+    res.json({
+      success: true,
+      data: {
+        user: (userRows as any[])[0],
+        ratings: ratings,
+        totalRatings: (ratings as any[]).length,
+      }
+    });
+  } catch (error) {
+    console.error('Error en getUserProfile:', error);
+    res.status(500).json({ success: false, error: 'Error al obtener perfil.' });
+  }
+}

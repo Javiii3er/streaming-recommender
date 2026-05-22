@@ -9,6 +9,7 @@ import {
 } from '../controllers/recommendation.controller';
 import { chatWithAI } from '../controllers/chat.controller';
 import { register, login } from '../controllers/auth.controller';
+import { getUserProfile } from '../controllers/recommendation.controller';
 
 const router = Router();
 
@@ -30,6 +31,9 @@ router.post('/ratings', addRating);
 // Autenticación
 router.post('/auth/register', register);
 router.post('/auth/login', login);
+
+// Perfil de usuario
+router.get('/profile/:userId', getUserProfile);
 
 // Health check
 router.get('/health', (_req, res) => {

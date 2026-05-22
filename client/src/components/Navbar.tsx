@@ -13,7 +13,7 @@ export default function Navbar() {
 
   function handleLogout() {
     logout();
-    navigate('/');
+    navigate('/login');
   }
 
   return (
@@ -46,9 +46,20 @@ export default function Navbar() {
         <div className="flex items-center gap-3">
           {isAuthenticated ? (
             <>
-              <span className="text-neutral-400 text-sm font-body hidden md:block">
-                Hola, <span className="text-white font-medium">{user?.name}</span>
-              </span>
+              {/* Nombre clickeable que lleva al perfil */}
+              <button
+                onClick={() => navigate('/perfil')}
+                className="text-neutral-400 text-sm font-body hidden md:flex items-center gap-2
+                           hover:text-white transition-colors"
+              >
+                {/* Avatar inicial */}
+                <span className="w-7 h-7 bg-brand-500 rounded-full flex items-center justify-center
+                                 text-white text-xs font-display font-bold">
+                  {user?.name.charAt(0).toUpperCase()}
+                </span>
+                <span>Hola, <span className="text-white font-medium">{user?.name}</span></span>
+              </button>
+
               <button
                 onClick={handleLogout}
                 className="text-sm font-display text-neutral-400 hover:text-brand-500
