@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { fetchGenres, fetchRecommendations } from '../services/recommendations.api';
 import { RecommendedMovie } from '../types';
 import MovieCard from '../components/MovieCard';
+import { useAuth } from '../context/AuthContext';
 
 const HOW_IT_WORKS = [
   {
@@ -33,6 +34,7 @@ export default function Home() {
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 12;
   const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
 
   useEffect(() => {
     fetchGenres()
@@ -58,7 +60,8 @@ export default function Home() {
     try {
       const results = await fetchRecommendations({
         genres: selectedGenres,
-        userName: userName || undefined,
+        userName: user?.name || userName || undefined,
+        userId: user?.id || undefined,
       });
       setRecommendations(results);
       setCurrentPage(1);
@@ -90,7 +93,7 @@ export default function Home() {
             <span className="text-brand-500">película favorita</span>
           </h1>
           <p className="text-neutral-400 text-lg max-w-xl mx-auto font-body mt-4">
-            Combinamos un algoritmo de filtrado colaborativo con inteligencia 
+            Combinamos un algoritmo de filtrado colaborativo con inteligencia
             artificial para recomendarte películas que realmente te van a gustar.
           </p>
         </div>
@@ -117,29 +120,48 @@ export default function Home() {
       {/* ── Formulario ───────────────────────────────────────── */}
       <main className="max-w-4xl mx-auto px-6 pb-20 space-y-10">
 
-        {/* Paso 1 */}
-        <section className="space-y-3">
-          <div className="flex items-center gap-3">
-            <span className="w-7 h-7 rounded-full bg-brand-500 text-white text-xs font-display font-bold flex items-center justify-center">1</span>
-            <h2 className="font-display font-semibold text-white text-lg">¿Cómo te llamas?
-              <span className="text-neutral-500 font-body font-normal text-base ml-2">(opcional)</span>
-            </h2>
-          </div>
-          <input
-            type="text"
-            value={userName}
-            onChange={(e) => setUserName(e.target.value)}
-            placeholder="Tu nombre..."
-            className="w-full max-w-sm bg-neutral-900 border border-neutral-700 rounded-xl px-4 py-3
-                       text-white placeholder-neutral-600 focus:outline-none focus:border-brand-500
-                       transition-colors font-body"
-          />
-        </section>
+        {/* Paso 1 — Solo si NO está logueado */}
+        {!isAuthenticated && (
+          <section className="space-y-3">
+            <div className="flex items-center gap-3">
+              <span className="w-7 h-7 rounded-full bg-brand-500 text-white text-xs font-display font-bold flex items-center justify-center">1</span>
+              <h2 className="font-display font-semibold text-white text-lg">¿Cómo te llamas?
+                <span className="text-neutral-500 font-body font-normal text-base ml-2">(opcional)</span>
+              </h2>
+            </div>
+            <input
+              type="text"
+              value={userName}
+              onChange={(e) => setUserName(e.target.value)}
+              placeholder="Tu nombre..."
+              className="w-full max-w-sm bg-neutral-900 border border-neutral-700 rounded-xl px-4 py-3
+                         text-white placeholder-neutral-600 focus:outline-none focus:border-brand-500
+                         transition-colors font-body"
+            />
+          </section>
+        )}
 
-        {/* Paso 2 */}
+        {/* Saludo si está logueado */}
+        {isAuthenticated && (
+          <div className="flex items-center gap-3 bg-neutral-900/50 border border-neutral-800 rounded-2xl px-5 py-4">
+            <span className="text-2xl">👋</span>
+            <div>
+              <p className="text-white font-display font-bold">
+                Hola, {user?.name}
+              </p>
+              <p className="text-neutral-500 text-sm font-body">
+                Tus recomendaciones serán personalizadas con tu historial.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Paso 2 — Géneros */}
         <section className="space-y-4">
           <div className="flex items-center gap-3">
-            <span className="w-7 h-7 rounded-full bg-brand-500 text-white text-xs font-display font-bold flex items-center justify-center">2</span>
+            <span className="w-7 h-7 rounded-full bg-brand-500 text-white text-xs font-display font-bold flex items-center justify-center">
+              {isAuthenticated ? '1' : '2'}
+            </span>
             <div>
               <h2 className="font-display font-semibold text-white text-lg">
                 ¿Qué géneros te gustan?
@@ -178,7 +200,9 @@ export default function Home() {
 
         {/* Paso 3 — Botón */}
         <div className="flex items-center gap-3">
-          <span className="w-7 h-7 rounded-full bg-brand-500 text-white text-xs font-display font-bold flex items-center justify-center">3</span>
+          <span className="w-7 h-7 rounded-full bg-brand-500 text-white text-xs font-display font-bold flex items-center justify-center">
+            {isAuthenticated ? '2' : '3'}
+          </span>
           <button
             onClick={handleSubmit}
             disabled={loading || selectedGenres.length === 0}
@@ -208,11 +232,12 @@ export default function Home() {
         {/* ── Resultados ────────────────────────────────────── */}
         {!loading && recommendations.length > 0 && (
           <section className="space-y-6">
-            {/* Encabezado con contador */}
             <div className="flex items-end justify-between">
               <div>
                 <h2 className="font-display font-bold text-white text-2xl">
-                  {userName ? `Recomendaciones para ${userName}` : 'Tus recomendaciones'}
+                  {user?.name || userName
+                    ? `Recomendaciones para ${user?.name || userName}`
+                    : 'Tus recomendaciones'}
                 </h2>
                 <p className="text-neutral-500 text-sm mt-1">
                   Basadas en tus géneros favoritos y enriquecidas con IA
@@ -224,7 +249,6 @@ export default function Home() {
               </span>
             </div>
 
-            {/* Grid de películas */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {recommendations
                 .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)

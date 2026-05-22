@@ -12,5 +12,6 @@ export const env = {
   },
   anthropicKey: process.env.ANTHROPIC_API_KEY || '',
   tmdbKey: process.env.TMDB_API_KEY || '',
+  jwtSecret: process.env.JWT_SECRET || 'streammatch_secret_key_2026',
   clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
 };
