@@ -6,10 +6,17 @@ import {
   getMovieById,
   searchTMDB,
   addRating,
+  getUserProfile,
 } from '../controllers/recommendation.controller';
 import { chatWithAI } from '../controllers/chat.controller';
 import { register, login } from '../controllers/auth.controller';
-import { getUserProfile } from '../controllers/recommendation.controller';
+import {
+  addFavorite,
+  removeFavorite,
+  getFavorites,
+  checkFavorite,
+  getFavoriteRecommendations,
+} from '../controllers/favorites.controller';
 
 const router = Router();
 
@@ -34,6 +41,14 @@ router.post('/auth/login', login);
 
 // Perfil de usuario
 router.get('/profile/:userId', getUserProfile);
+
+// Favoritos
+router.post('/favorites', addFavorite);
+router.post('/favorites/remove', removeFavorite);
+router.delete('/favorites', removeFavorite);
+router.get('/favorites/:userId', getFavorites);
+router.get('/favorites/check/:userId/:movieId', checkFavorite);
+router.post('/favorites/recommendations', getFavoriteRecommendations);
 
 // Health check
 router.get('/health', (_req, res) => {

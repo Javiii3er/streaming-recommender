@@ -1,11 +1,15 @@
 import { RecommendedMovie } from '../types';
 
-interface Props {
-  movie: RecommendedMovie;
-  index: number;
-}
+const GENRE_TRANSLATIONS: Record<string, string> = {
+  'Action': 'Acción', 'Adventure': 'Aventura', 'Animation': 'Animación',
+  'Children': 'Infantil', 'Comedy': 'Comedia', 'Crime': 'Crimen',
+  'Documentary': 'Documental', 'Drama': 'Drama', 'Family': 'Familia',
+  'Fantasy': 'Fantasía', 'History': 'Historia', 'Horror': 'Terror',
+  'IMAX': 'IMAX', 'Musical': 'Musical', 'Mystery': 'Misterio',
+  'Romance': 'Romance', 'Sci-Fi': 'Ciencia Ficción', 'Thriller': 'Suspenso',
+  'TV Movie': 'Película de TV', 'War': 'Guerra', 'Western': 'Western',
+};
 
-// Géneros con colores para las etiquetas
 const genreColors: Record<string, string> = {
   Action:    'bg-orange-900/50 text-orange-300',
   Drama:     'bg-blue-900/50 text-blue-300',
@@ -26,7 +30,7 @@ interface Props {
 }
 
 export default function MovieCard({ movie, index, onClick }: Props) {
-  const genres = movie.genres.split('|').slice(0, 3); // Máximo 3 géneros
+  const genres = movie.genres.split('|').slice(0, 3);
   const scorePercent = Math.round(movie.score * 100);
 
   return (
@@ -35,7 +39,7 @@ export default function MovieCard({ movie, index, onClick }: Props) {
       style={{ animationDelay: `${index * 80}ms` }}
       onClick={onClick}
     >
-      {/* Header de la card — imagen o fallback */}
+      {/* Header */}
       <div className="relative h-40 bg-gradient-to-br from-neutral-800 to-neutral-900 flex items-center justify-center">
         {movie.image_url ? (
           <img
@@ -72,7 +76,7 @@ export default function MovieCard({ movie, index, onClick }: Props) {
           )}
         </div>
 
-        {/* Géneros */}
+        {/* Géneros en español */}
         <div className="flex flex-wrap gap-1.5">
           {genres.map((genre) => (
             <span
@@ -81,7 +85,7 @@ export default function MovieCard({ movie, index, onClick }: Props) {
                 genreColors[genre] || 'bg-neutral-800 text-neutral-400'
               }`}
             >
-              {genre}
+              {GENRE_TRANSLATIONS[genre] || genre}
             </span>
           ))}
         </div>

@@ -5,6 +5,30 @@ import { RecommendedMovie } from '../types';
 import MovieCard from '../components/MovieCard';
 import { useAuth } from '../context/AuthContext';
 
+const GENRE_TRANSLATIONS: Record<string, string> = {
+  'Action': 'Acción',
+  'Adventure': 'Aventura',
+  'Animation': 'Animación',
+  'Children': 'Infantil',
+  'Comedy': 'Comedia',
+  'Crime': 'Crimen',
+  'Documentary': 'Documental',
+  'Drama': 'Drama',
+  'Family': 'Familia',
+  'Fantasy': 'Fantasía',
+  'History': 'Historia',
+  'Horror': 'Terror',
+  'IMAX': 'IMAX',
+  'Musical': 'Musical',
+  'Mystery': 'Misterio',
+  'Romance': 'Romance',
+  'Sci-Fi': 'Ciencia Ficción',
+  'Thriller': 'Suspenso',
+  'TV Movie': 'Película de TV',
+  'War': 'Guerra',
+  'Western': 'Western',
+};
+
 const HOW_IT_WORKS = [
   {
     icon: '🎭',
@@ -179,7 +203,7 @@ export default function Home() {
                 onClick={() => toggleGenre(genre)}
                 className={`genre-chip ${selectedGenres.includes(genre) ? 'genre-chip--selected' : ''}`}
               >
-                {genre}
+                {GENRE_TRANSLATIONS[genre] || genre}
               </button>
             ))}
           </div>

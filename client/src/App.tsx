@@ -6,6 +6,7 @@ import Explorar from './pages/Explorar';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
+import Favorites from './pages/Favorites';
 import ChatBot from './components/ChatBot';
 import PrivateRoute from './components/PrivateRoute';
 
@@ -31,6 +32,9 @@ export default function App() {
           } />
           <Route path="/perfil" element={
             <PrivateRoute><Profile /></PrivateRoute>
+          } />
+          <Route path="/favoritos" element={
+            <PrivateRoute><Favorites /></PrivateRoute>
           } />
         </Routes>
       </div>

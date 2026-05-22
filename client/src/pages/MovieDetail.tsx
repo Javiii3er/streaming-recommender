@@ -3,6 +3,17 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { fetchMovieById } from '../services/recommendations.api';
 import { Movie } from '../types';
 import StarRating from '../components/StarRating';
+import FavoriteButton from '../components/FavoriteButton';
+
+const GENRE_TRANSLATIONS: Record<string, string> = {
+  'Action': 'Acción', 'Adventure': 'Aventura', 'Animation': 'Animación',
+  'Children': 'Infantil', 'Comedy': 'Comedia', 'Crime': 'Crimen',
+  'Documentary': 'Documental', 'Drama': 'Drama', 'Family': 'Familia',
+  'Fantasy': 'Fantasía', 'History': 'Historia', 'Horror': 'Terror',
+  'IMAX': 'IMAX', 'Musical': 'Musical', 'Mystery': 'Misterio',
+  'Romance': 'Romance', 'Sci-Fi': 'Ciencia Ficción', 'Thriller': 'Suspenso',
+  'TV Movie': 'Película de TV', 'War': 'Guerra', 'Western': 'Western',
+};
 
 const genreColors: Record<string, string> = {
   Action:    'bg-orange-900/50 text-orange-300',
@@ -110,7 +121,7 @@ export default function MovieDetail() {
               )}
             </div>
 
-            {/* Géneros */}
+            {/* Géneros en español */}
             <div className="flex flex-wrap gap-2">
               {genres.map((genre) => (
                 <span
@@ -119,7 +130,7 @@ export default function MovieDetail() {
                     genreColors[genre] || 'bg-neutral-800 text-neutral-400'
                   }`}
                 >
-                  {genre}
+                  {GENRE_TRANSLATIONS[genre] || genre}
                 </span>
               ))}
             </div>
@@ -131,9 +142,11 @@ export default function MovieDetail() {
               </p>
             )}
 
-            {/* Rating promedio + estrellas */}
+            {/* Rating + Favorito + Estrellas */}
             <div className="flex flex-col gap-4 pt-2">
-              <div className="flex items-center gap-3">
+
+              {/* Fila superior — rating promedio + botones */}
+              <div className="flex flex-wrap items-center gap-3">
                 <div className="bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 flex items-center gap-2">
                   <span className="text-yellow-400 text-lg">★</span>
                   <div>
@@ -145,6 +158,9 @@ export default function MovieDetail() {
                     </p>
                   </div>
                 </div>
+
+                {/* Botón favoritos */}
+                <FavoriteButton movie={movie} />
 
                 <button
                   onClick={() => navigate('/')}

@@ -9,6 +9,7 @@ export default function Navbar() {
   const links = [
     { path: '/', label: 'Inicio' },
     { path: '/explorar', label: 'Explorar' },
+    { path: '/favoritos', label: '♥ Favoritos' },
   ];
 
   function handleLogout() {
@@ -28,17 +29,21 @@ export default function Navbar() {
         {/* Links */}
         <div className="flex items-center gap-6">
           {links.map((link) => (
-            <Link
-              key={link.path}
-              to={link.path}
-              className={`font-body text-sm transition-colors ${
-                location.pathname === link.path
-                  ? 'text-white font-medium'
-                  : 'text-neutral-400 hover:text-white'
-              }`}
-            >
-              {link.label}
-            </Link>
+            isAuthenticated || link.path === '/login' ? (
+              <Link
+                key={link.path}
+                to={link.path}
+                className={`font-body text-sm transition-colors ${
+                  location.pathname === link.path
+                    ? 'text-white font-medium'
+                    : link.path === '/favoritos'
+                    ? 'text-brand-500 hover:text-brand-400'
+                    : 'text-neutral-400 hover:text-white'
+                }`}
+              >
+                {link.label}
+              </Link>
+            ) : null
           ))}
         </div>
 
@@ -46,13 +51,11 @@ export default function Navbar() {
         <div className="flex items-center gap-3">
           {isAuthenticated ? (
             <>
-              {/* Nombre clickeable que lleva al perfil */}
               <button
                 onClick={() => navigate('/perfil')}
                 className="text-neutral-400 text-sm font-body hidden md:flex items-center gap-2
                            hover:text-white transition-colors"
               >
-                {/* Avatar inicial */}
                 <span className="w-7 h-7 bg-brand-500 rounded-full flex items-center justify-center
                                  text-white text-xs font-display font-bold">
                   {user?.name.charAt(0).toUpperCase()}
