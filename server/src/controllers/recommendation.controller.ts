@@ -115,6 +115,20 @@ export async function getMovieById(req: Request, res: Response): Promise<void> {
         avg_rating: tmdbData.vote_average ? tmdbData.vote_average / 2 : 0,
         rating_count: tmdbData.vote_count || 0,
       };
+
+      // ── Guarda automáticamente en BD local ──────────────
+      // Con INSERT IGNORE — si ya existe no hace nada
+      try {
+        await pool.query(
+          `INSERT IGNORE INTO movies (id, title, genres, year, image_url, description)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          [movie.id, movie.title, movie.genres, movie.year, movie.image_url, movie.description]
+        );
+      } catch (insertError) {
+        // Si falla el insert no interrumpimos la respuesta
+        console.warn('No se pudo guardar la película en BD local:', insertError);
+      }
+
       res.json({ success: true, data: movie });
       return;
     }
