@@ -4,12 +4,10 @@ import { enrichWithAI } from '../services/ai.service';
 import { ApiResponse, RecommendedMovie } from '../types';
 
 // POST /api/recommendations
-// Body: { genres: string[], userId?: number, userName?: string }
 export async function getRecommendations(req: Request, res: Response): Promise<void> {
   try {
     const { genres, userId, userName } = req.body;
 
-    // Validación básica
     if (!genres || !Array.isArray(genres) || genres.length === 0) {
       res.status(400).json({
         success: false,
@@ -18,7 +16,6 @@ export async function getRecommendations(req: Request, res: Response): Promise<v
       return;
     }
 
-    // Paso 1: Algoritmo de recomendación
     let recommendations: RecommendedMovie[];
     if (userId) {
       recommendations = await recommendCollaborative(userId, genres);
@@ -26,7 +23,6 @@ export async function getRecommendations(req: Request, res: Response): Promise<v
       recommendations = await recommendByGenres(genres);
     }
 
-    // Paso 2: Enriquecimiento con IA (Claude)
     const enriched = await enrichWithAI(recommendations, genres, userName);
 
     res.json({
@@ -44,7 +40,6 @@ export async function getRecommendations(req: Request, res: Response): Promise<v
 }
 
 // GET /api/movies
-// Devuelve todas las películas disponibles
 export async function getAllMovies(req: Request, res: Response): Promise<void> {
   try {
     const pool = (await import('../db/db')).default;
@@ -57,7 +52,6 @@ export async function getAllMovies(req: Request, res: Response): Promise<void> {
 }
 
 // GET /api/genres
-// Devuelve la lista de géneros únicos disponibles
 export async function getGenres(req: Request, res: Response): Promise<void> {
   try {
     const pool = (await import('../db/db')).default;
@@ -77,12 +71,12 @@ export async function getGenres(req: Request, res: Response): Promise<void> {
 }
 
 // GET /api/movies/:id
-// Devuelve los detalles de una película específica por su ID junto con su puntuación media
 export async function getMovieById(req: Request, res: Response): Promise<void> {
   try {
     const { id } = req.params;
     const pool = (await import('../db/db')).default;
-    
+
+    // Primero busca en BD local
     const [rows] = await pool.query<any[]>(
       `SELECT m.*, 
         COALESCE(AVG(r.rating), 0) as avg_rating,
@@ -94,12 +88,38 @@ export async function getMovieById(req: Request, res: Response): Promise<void> {
       [id]
     );
 
-    if (!rows.length) {
-      res.status(404).json({ success: false, error: 'Película no encontrada.' });
+    if ((rows as any[]).length > 0) {
+      res.json({ success: true, data: (rows as any[])[0] });
       return;
     }
 
-    res.json({ success: true, data: rows[0] });
+    // Si no existe en BD local, busca en TMDB
+    const { env } = await import('../config/env');
+    const tmdbRes = await fetch(
+      `https://api.themoviedb.org/3/movie/${id}?api_key=${env.tmdbKey}&language=es-ES`
+    );
+    const tmdbData = await tmdbRes.json() as any;
+
+    if (tmdbData.id) {
+      const movie = {
+        id: tmdbData.id,
+        title: tmdbData.title,
+        genres: tmdbData.genres?.map((g: any) => g.name).join('|') || '',
+        year: tmdbData.release_date
+          ? new Date(tmdbData.release_date).getFullYear()
+          : null,
+        image_url: tmdbData.poster_path
+          ? `https://image.tmdb.org/t/p/w500${tmdbData.poster_path}`
+          : null,
+        description: tmdbData.overview || null,
+        avg_rating: tmdbData.vote_average ? tmdbData.vote_average / 2 : 0,
+        rating_count: tmdbData.vote_count || 0,
+      };
+      res.json({ success: true, data: movie });
+      return;
+    }
+
+    res.status(404).json({ success: false, error: 'Película no encontrada.' });
   } catch (error) {
     console.error('Error en getMovieById:', error);
     res.status(500).json({ success: false, error: 'Error al obtener la película.' });
@@ -151,7 +171,6 @@ export async function addRating(req: Request, res: Response): Promise<void> {
 
     const pool = (await import('../db/db')).default;
 
-    // Si hay userId, guarda en BD. Si no, solo devuelve éxito
     if (userId) {
       await pool.query(
         `INSERT INTO ratings (user_id, movie_id, rating) 
@@ -174,7 +193,6 @@ export async function getUserProfile(req: Request, res: Response): Promise<void>
     const { userId } = req.params;
     const pool = (await import('../db/db')).default;
 
-    // Datos del usuario
     const [userRows] = await pool.query<any[]>(
       'SELECT id, name, email, created_at FROM users WHERE id = ?',
       [userId]
@@ -185,7 +203,6 @@ export async function getUserProfile(req: Request, res: Response): Promise<void>
       return;
     }
 
-    // Historial de ratings con info de la película
     const [ratings] = await pool.query<any[]>(
       `SELECT r.rating, r.created_at, m.id as movie_id, m.title, m.genres, m.year, m.image_url
        FROM ratings r
@@ -206,5 +223,42 @@ export async function getUserProfile(req: Request, res: Response): Promise<void>
   } catch (error) {
     console.error('Error en getUserProfile:', error);
     res.status(500).json({ success: false, error: 'Error al obtener perfil.' });
+  }
+}
+
+// GET /api/movies/:id/similar
+export async function getSimilarMovies(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    const pool = (await import('../db/db')).default;
+
+    const [movieRows] = await pool.query<any[]>(
+      'SELECT genres FROM movies WHERE id = ?', [id]
+    );
+
+    if (!(movieRows as any[]).length) {
+      res.json({ success: true, data: [] });
+      return;
+    }
+
+    const genres = (movieRows as any[])[0].genres.split('|');
+    const genreConditions = genres.map(() => 'genres LIKE ?').join(' OR ');
+    const genreParams = genres.map((g: string) => `%${g}%`);
+
+    const [similar] = await pool.query<any[]>(
+      `SELECT m.*, COALESCE(AVG(r.rating), 3.0) as avg_rating
+       FROM movies m
+       LEFT JOIN ratings r ON m.id = r.movie_id
+       WHERE (${genreConditions}) AND m.id != ?
+       GROUP BY m.id
+       ORDER BY avg_rating DESC
+       LIMIT 6`,
+      [...genreParams, id]
+    );
+
+    res.json({ success: true, data: similar });
+  } catch (error) {
+    console.error('Error en getSimilarMovies:', error);
+    res.status(500).json({ success: false, error: 'Error al obtener películas similares.' });
   }
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fetchMovieById } from '../services/recommendations.api';
+import { fetchMovieById, fetchSimilarMovies } from '../services/recommendations.api';
 import { Movie } from '../types';
 import StarRating from '../components/StarRating';
 import FavoriteButton from '../components/FavoriteButton';
@@ -32,13 +32,22 @@ export default function MovieDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [movie, setMovie] = useState<Movie | null>(null);
+  const [similar, setSimilar] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (!id) return;
+    setLoading(true);
+    setMovie(null);
+    setSimilar([]);
+
     fetchMovieById(Number(id))
-      .then(setMovie)
+      .then((m) => {
+        setMovie(m);
+        return fetchSimilarMovies(Number(id));
+      })
+      .then(setSimilar)
       .catch(() => setError('No se pudo cargar la película.'))
       .finally(() => setLoading(false));
   }, [id]);
@@ -96,7 +105,7 @@ export default function MovieDetail() {
       </div>
 
       {/* ── Contenido ─────────────────────────────────────── */}
-      <main className="max-w-4xl mx-auto px-6 -mt-20 relative z-10 pb-20">
+      <main className="max-w-4xl mx-auto px-6 -mt-20 relative z-10 pb-20 space-y-12">
         <div className="flex flex-col md:flex-row gap-8">
 
           {/* Poster */}
@@ -144,8 +153,6 @@ export default function MovieDetail() {
 
             {/* Rating + Favorito + Estrellas */}
             <div className="flex flex-col gap-4 pt-2">
-
-              {/* Fila superior — rating promedio + botones */}
               <div className="flex flex-wrap items-center gap-3">
                 <div className="bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 flex items-center gap-2">
                   <span className="text-yellow-400 text-lg">★</span>
@@ -159,7 +166,6 @@ export default function MovieDetail() {
                   </div>
                 </div>
 
-                {/* Botón favoritos */}
                 <FavoriteButton movie={movie} />
 
                 <button
@@ -170,7 +176,6 @@ export default function MovieDetail() {
                 </button>
               </div>
 
-              {/* Sistema de rating con estrellas */}
               <div className="bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3">
                 <StarRating
                   movieId={movie.id}
@@ -180,6 +185,53 @@ export default function MovieDetail() {
             </div>
           </div>
         </div>
+
+        {/* ── Películas similares ───────────────────────────── */}
+        {similar.length > 0 && (
+          <section className="space-y-5 border-t border-neutral-800 pt-10">
+            <div>
+              <h2 className="font-display font-bold text-white text-xl">
+                Películas similares
+              </h2>
+              <p className="text-neutral-500 text-sm mt-1">
+                Basadas en los mismos géneros
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+              {similar.map((m, i) => (
+                <div
+                  key={m.id}
+                  onClick={() => navigate(`/pelicula/${m.id}`)}
+                  className="cursor-pointer group animate-fade-up"
+                  style={{ animationDelay: `${i * 60}ms` }}
+                >
+                  <div className="relative rounded-xl overflow-hidden aspect-[2/3] bg-neutral-900
+                                  border border-neutral-800 group-hover:border-brand-500
+                                  transition-all duration-300 group-hover:-translate-y-1
+                                  group-hover:shadow-lg group-hover:shadow-brand-500/20">
+                    {m.image_url ? (
+                      <img src={m.image_url} alt={m.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <span className="text-3xl opacity-20">🎬</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-2">
+                    <p className="text-white text-xs font-display font-semibold leading-tight
+                                  truncate group-hover:text-brand-500 transition-colors">
+                      {m.title}
+                    </p>
+                    {m.year && (
+                      <p className="text-neutral-500 text-xs mt-0.5">{m.year}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
       </main>
     </div>
   );

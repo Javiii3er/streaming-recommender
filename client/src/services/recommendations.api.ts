@@ -22,3 +22,8 @@ export async function fetchMovieById(id: number): Promise<Movie> {
   const res = await http.get<ApiResponse<Movie>>(`/movies/${id}`);
   return res.data!;
 }
+
+export async function fetchSimilarMovies(id: number): Promise<Movie[]> {
+  const res = await http.get<ApiResponse<Movie[]>>(`/movies/${id}/similar`);
+  return res.data || [];
+}

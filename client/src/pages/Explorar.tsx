@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { http } from '../services/http';
 import { ApiResponse, RecommendedMovie } from '../types';
 
@@ -9,15 +9,25 @@ export default function Explorar() {
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-  async function handleSearch() {
-    if (!query.trim()) return;
+  // Lee el parámetro ?q= de la URL al cargar
+  useEffect(() => {
+    const q = searchParams.get('q');
+    if (q) {
+      setQuery(q);
+      handleSearchWithQuery(q);
+    }
+  }, []);
+
+  async function handleSearchWithQuery(q: string) {
+    if (!q.trim()) return;
     setLoading(true);
     setHasSearched(true);
 
     try {
       const res = await http.get<ApiResponse<RecommendedMovie[]>>(
-        `/search?q=${encodeURIComponent(query)}`
+        `/search?q=${encodeURIComponent(q)}`
       );
       setResults(res.data || []);
     } catch {
@@ -25,6 +35,10 @@ export default function Explorar() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleSearch() {
+    handleSearchWithQuery(query);
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {

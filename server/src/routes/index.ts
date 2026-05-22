@@ -9,6 +9,7 @@ import {
   getUserProfile,
 } from '../controllers/recommendation.controller';
 import { chatWithAI } from '../controllers/chat.controller';
+import { getSimilarMovies } from '../controllers/recommendation.controller';
 import { register, login } from '../controllers/auth.controller';
 import {
   addFavorite,
@@ -31,6 +32,7 @@ router.get('/movies', getAllMovies);
 router.get('/genres', getGenres);
 router.get('/movies/:id', getMovieById);
 router.get('/search', searchTMDB);
+router.get('/movies/:id/similar', getSimilarMovies);
 
 // Ratings
 router.post('/ratings', addRating);
