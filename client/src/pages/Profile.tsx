@@ -3,6 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { http } from '../services/http';
 import { ApiResponse } from '../types';
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  LineChart, Line, CartesianGrid,
+} from 'recharts';
 
 interface RatingItem {
   movie_id: number;
@@ -43,17 +47,14 @@ const GENRE_COLORS = [
 
 function calculateGenreStats(ratings: RatingItem[]): GenreStat[] {
   const genreCount: Record<string, number> = {};
-
   ratings.forEach((item) => {
     item.genres.split('|').forEach((genre) => {
       const g = genre.trim();
       if (g) genreCount[g] = (genreCount[g] || 0) + 1;
     });
   });
-
   const total = Object.values(genreCount).reduce((a, b) => a + b, 0);
   if (total === 0) return [];
-
   return Object.entries(genreCount)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 6)
@@ -64,12 +65,50 @@ function calculateGenreStats(ratings: RatingItem[]): GenreStat[] {
     }));
 }
 
+function calculateRatingDistribution(ratings: RatingItem[]) {
+  const dist: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  ratings.forEach((r) => {
+    const rounded = Math.round(r.rating);
+    if (rounded >= 1 && rounded <= 5) dist[rounded]++;
+  });
+  return Object.entries(dist).map(([stars, count]) => ({
+    stars: `${stars}★`,
+    cantidad: count,
+  }));
+}
+
+function calculateRatingsByMonth(ratings: RatingItem[]) {
+  const monthCount: Record<string, number> = {};
+  ratings.forEach((r) => {
+    const date = new Date(r.created_at);
+    const key = date.toLocaleDateString('es-ES', { month: 'short', year: '2-digit' });
+    monthCount[key] = (monthCount[key] || 0) + 1;
+  });
+  return Object.entries(monthCount)
+    .slice(-6)
+    .map(([mes, películas]) => ({ mes, películas }));
+}
+
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-neutral-800 border border-neutral-700 rounded-xl px-3 py-2 text-sm">
+        <p className="text-white font-display font-bold">{label}</p>
+        <p className="text-brand-500">{payload[0].value} película{payload[0].value !== 1 ? 's' : ''}</p>
+      </div>
+    );
+  }
+  return null;
+};
+
 export default function Profile() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [genreStats, setGenreStats] = useState<GenreStat[]>([]);
+  const [ratingDist, setRatingDist] = useState<any[]>([]);
+  const [ratingsByMonth, setRatingsByMonth] = useState<any[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -78,6 +117,8 @@ export default function Profile() {
         setProfile(res.data!);
         if (res.data?.ratings) {
           setGenreStats(calculateGenreStats(res.data.ratings));
+          setRatingDist(calculateRatingDistribution(res.data.ratings));
+          setRatingsByMonth(calculateRatingsByMonth(res.data.ratings));
         }
       })
       .catch(console.error)
@@ -97,6 +138,8 @@ export default function Profile() {
       </div>
     );
   }
+
+  const hasData = (profile?.ratings.length || 0) > 0;
 
   return (
     <div className="min-h-screen bg-neutral-950">
@@ -139,8 +182,8 @@ export default function Profile() {
             </div>
             <div className="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-4">
               <p className="text-3xl font-display font-bold text-white">
-                {profile?.ratings.length
-                  ? (profile.ratings.reduce((acc, r) => acc + r.rating, 0) / profile.ratings.length).toFixed(1)
+                {profile?.ratings && profile.ratings.length > 0
+                 ?(profile.ratings.reduce((acc, r) => acc + Number(r.rating), 0) / profile.ratings.length).toFixed(1)
                   : '—'}
               </p>
               <p className="text-neutral-400 text-sm mt-1">Rating promedio</p>
@@ -184,6 +227,72 @@ export default function Profile() {
                   </div>
                 </div>
               ))}
+            </div>
+          </section>
+        )}
+
+        {/* ── Dashboard de gráficas ─────────────────────────── */}
+        {hasData && (
+          <section className="space-y-4">
+            <h2 className="font-display font-bold text-white text-xl">
+              Tu actividad
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+              {/* Distribución de ratings */}
+              <div className="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-5 space-y-3">
+                <p className="text-white font-display font-semibold text-sm">
+                  Distribución de ratings
+                </p>
+                <ResponsiveContainer width="100%" height={180}>
+                  <BarChart data={ratingDist} barSize={28}>
+                    <XAxis
+                      dataKey="stars"
+                      tick={{ fill: '#737373', fontSize: 12 }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis hide />
+                    <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+                    <Bar dataKey="cantidad" fill="#E11D48" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Películas por mes */}
+              <div className="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-5 space-y-3">
+                <p className="text-white font-display font-semibold text-sm">
+                  Películas valoradas por mes
+                </p>
+                {ratingsByMonth.length > 1 ? (
+                  <ResponsiveContainer width="100%" height={180}>
+                    <LineChart data={ratingsByMonth}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#262626" />
+                      <XAxis
+                        dataKey="mes"
+                        tick={{ fill: '#737373', fontSize: 11 }}
+                        axisLine={false}
+                        tickLine={false}
+                      />
+                      <YAxis hide />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Line
+                        type="monotone"
+                        dataKey="películas"
+                        stroke="#E11D48"
+                        strokeWidth={2}
+                        dot={{ fill: '#E11D48', r: 4 }}
+                        activeDot={{ r: 6 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-[180px] flex items-center justify-center text-neutral-600 text-sm">
+                    Necesitas más valoraciones para ver la tendencia
+                  </div>
+                )}
+              </div>
             </div>
           </section>
         )}
