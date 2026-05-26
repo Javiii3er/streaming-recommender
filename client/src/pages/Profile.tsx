@@ -20,16 +20,66 @@ interface ProfileData {
   totalRatings: number;
 }
 
+interface GenreStat {
+  genre: string;
+  count: number;
+  percentage: number;
+}
+
+const GENRE_TRANSLATIONS: Record<string, string> = {
+  'Action': 'Acción', 'Adventure': 'Aventura', 'Animation': 'Animación',
+  'Children': 'Infantil', 'Comedy': 'Comedia', 'Crime': 'Crimen',
+  'Documentary': 'Documental', 'Drama': 'Drama', 'Family': 'Familia',
+  'Fantasy': 'Fantasía', 'History': 'Historia', 'Horror': 'Terror',
+  'IMAX': 'IMAX', 'Musical': 'Musical', 'Mystery': 'Misterio',
+  'Romance': 'Romance', 'Sci-Fi': 'Ciencia Ficción', 'Thriller': 'Suspenso',
+  'TV Movie': 'Película de TV', 'War': 'Guerra', 'Western': 'Western',
+};
+
+const GENRE_COLORS = [
+  'bg-brand-500', 'bg-blue-500', 'bg-purple-500',
+  'bg-green-500', 'bg-yellow-500', 'bg-pink-500',
+];
+
+function calculateGenreStats(ratings: RatingItem[]): GenreStat[] {
+  const genreCount: Record<string, number> = {};
+
+  ratings.forEach((item) => {
+    item.genres.split('|').forEach((genre) => {
+      const g = genre.trim();
+      if (g) genreCount[g] = (genreCount[g] || 0) + 1;
+    });
+  });
+
+  const total = Object.values(genreCount).reduce((a, b) => a + b, 0);
+  if (total === 0) return [];
+
+  return Object.entries(genreCount)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6)
+    .map(([genre, count]) => ({
+      genre,
+      count,
+      percentage: Math.round((count / total) * 100),
+    }));
+}
+
 export default function Profile() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [genreStats, setGenreStats] = useState<GenreStat[]>([]);
 
   useEffect(() => {
     if (!user) return;
     http.get<ApiResponse<ProfileData>>(`/profile/${user.id}`)
-      .then((res) => setProfile(res.data!))
+      .then((res) => {
+        setProfile(res.data!);
+        if (res.data?.ratings) {
+          setGenreStats(calculateGenreStats(res.data.ratings));
+        }
+      })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [user]);
@@ -57,7 +107,6 @@ export default function Profile() {
         <div className="relative max-w-4xl mx-auto px-6 pt-10 pb-12">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-5">
-              {/* Avatar */}
               <div className="w-16 h-16 bg-brand-500 rounded-full flex items-center justify-center
                               font-display font-bold text-white text-2xl">
                 {user?.name.charAt(0).toUpperCase()}
@@ -70,7 +119,6 @@ export default function Profile() {
               </div>
             </div>
 
-            {/* Botón volver */}
             <button
               onClick={() => navigate(-1)}
               className="text-sm font-display text-neutral-400 hover:text-white
@@ -109,63 +157,92 @@ export default function Profile() {
         </div>
       </header>
 
-      {/* ── Historial ─────────────────────────────────────────── */}
-      <main className="max-w-4xl mx-auto px-6 pb-20">
-        <h2 className="font-display font-bold text-white text-xl mb-6">
-          Historial de valoraciones
-        </h2>
+      <main className="max-w-4xl mx-auto px-6 pb-20 space-y-10">
 
-        {!profile?.ratings.length ? (
-          <div className="text-center py-16 space-y-4">
-            <span className="text-5xl opacity-20">🎬</span>
-            <p className="text-neutral-500">
-              Aún no has valorado ninguna película.
-            </p>
-            <button
-              onClick={() => navigate('/')}
-              className="btn-primary"
-            >
-              ✦ Explorar recomendaciones
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {profile.ratings.map((item, i) => (
-              <div
-                key={i}
-                onClick={() => navigate(`/pelicula/${item.movie_id}`)}
-                className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4
-                           flex items-center gap-4 cursor-pointer hover:border-neutral-600
-                           transition-all duration-200 hover:-translate-y-0.5"
-              >
-                {/* Poster */}
-                <div className="w-12 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-neutral-800">
-                  {item.image_url ? (
-                    <img src={item.image_url} alt={item.title} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-neutral-600">🎬</div>
-                  )}
+        {/* ── Géneros favoritos ─────────────────────────────── */}
+        {genreStats.length > 0 && (
+          <section className="space-y-4">
+            <h2 className="font-display font-bold text-white text-xl">
+              Tus géneros favoritos
+            </h2>
+            <div className="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-6 space-y-4">
+              {genreStats.map((stat, i) => (
+                <div key={stat.genre} className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-white text-sm font-display font-medium">
+                      {GENRE_TRANSLATIONS[stat.genre] || stat.genre}
+                    </span>
+                    <span className="text-neutral-500 text-xs">
+                      {stat.count} película{stat.count !== 1 ? 's' : ''} · {stat.percentage}%
+                    </span>
+                  </div>
+                  <div className="h-2 bg-neutral-800 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-700 ${GENRE_COLORS[i % GENRE_COLORS.length]}`}
+                      style={{ width: `${stat.percentage}%` }}
+                    />
+                  </div>
                 </div>
-
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <p className="font-display font-bold text-white truncate">{item.title}</p>
-                  <p className="text-neutral-500 text-xs mt-0.5">
-                    {item.year} · {item.genres.split('|').slice(0, 2).join(', ')}
-                  </p>
-                </div>
-
-                {/* Rating */}
-                <div className="flex flex-col items-end gap-1">
-                  <div className="flex text-lg">{renderStars(item.rating)}</div>
-                  <p className="text-neutral-500 text-xs">
-                    {new Date(item.created_at).toLocaleDateString('es-ES')}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </section>
         )}
+
+        {/* ── Historial ─────────────────────────────────────── */}
+        <section className="space-y-4">
+          <h2 className="font-display font-bold text-white text-xl">
+            Historial de valoraciones
+          </h2>
+
+          {!profile?.ratings.length ? (
+            <div className="text-center py-16 space-y-4">
+              <span className="text-5xl opacity-20">🎬</span>
+              <p className="text-neutral-500">
+                Aún no has valorado ninguna película.
+              </p>
+              <button
+                onClick={() => navigate('/inicio')}
+                className="btn-primary"
+              >
+                ✦ Explorar recomendaciones
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {profile.ratings.map((item, i) => (
+                <div
+                  key={i}
+                  onClick={() => navigate(`/pelicula/${item.movie_id}`)}
+                  className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4
+                             flex items-center gap-4 cursor-pointer hover:border-neutral-600
+                             transition-all duration-200 hover:-translate-y-0.5"
+                >
+                  <div className="w-12 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-neutral-800">
+                    {item.image_url ? (
+                      <img src={item.image_url} alt={item.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-neutral-600">🎬</div>
+                    )}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <p className="font-display font-bold text-white truncate">{item.title}</p>
+                    <p className="text-neutral-500 text-xs mt-0.5">
+                      {item.year} · {item.genres.split('|').slice(0, 2).map(g => GENRE_TRANSLATIONS[g] || g).join(', ')}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col items-end gap-1">
+                    <div className="flex text-lg">{renderStars(item.rating)}</div>
+                    <p className="text-neutral-500 text-xs">
+                      {new Date(item.created_at).toLocaleDateString('es-ES')}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       </main>
     </div>
   );
