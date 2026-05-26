@@ -16,12 +16,11 @@ export default function Navbar() {
   const searchRef = useRef<HTMLDivElement>(null);
 
   const links = [
-    { path: '/', label: 'Inicio' },
+    { path: '/inicio', label: 'Inicio' },
     { path: '/explorar', label: 'Explorar' },
     { path: '/favoritos', label: '♥ Favoritos' },
   ];
 
-  // Cierra el buscador al hacer clic fuera
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
@@ -34,12 +33,10 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Foco automático al abrir
   useEffect(() => {
     if (searchOpen) inputRef.current?.focus();
   }, [searchOpen]);
 
-  // Búsqueda con debounce
   useEffect(() => {
     if (!query.trim()) { setResults([]); return; }
     const timer = setTimeout(async () => {
@@ -67,36 +64,37 @@ export default function Navbar() {
 
   function handleLogout() {
     logout();
-    navigate('/login');
+    navigate('/');
   }
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-40 bg-neutral-950/80 backdrop-blur-md border-b border-neutral-800">
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
 
-        {/* Logo */}
-        <Link to="/" className="font-display font-extrabold text-xl text-white flex-shrink-0">
+        {/* Logo — siempre va al inicio correcto según estado */}
+        <Link
+          to={isAuthenticated ? '/inicio' : '/'}
+          className="font-display font-extrabold text-xl text-white flex-shrink-0"
+        >
           Stream<span className="text-brand-500">Match</span>
         </Link>
 
-        {/* Links */}
+        {/* Links — solo si está logueado */}
         <div className="flex items-center gap-6">
-          {links.map((link) => (
-            isAuthenticated ? (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={`font-body text-sm transition-colors ${
-                  location.pathname === link.path
-                    ? 'text-white font-medium'
-                    : link.path === '/favoritos'
-                    ? 'text-brand-500 hover:text-brand-400'
-                    : 'text-neutral-400 hover:text-white'
-                }`}
-              >
-                {link.label}
-              </Link>
-            ) : null
+          {isAuthenticated && links.map((link) => (
+            <Link
+              key={link.path}
+              to={link.path}
+              className={`font-body text-sm transition-colors ${
+                location.pathname === link.path
+                  ? 'text-white font-medium'
+                  : link.path === '/favoritos'
+                  ? 'text-brand-500 hover:text-brand-400'
+                  : 'text-neutral-400 hover:text-white'
+              }`}
+            >
+              {link.label}
+            </Link>
           ))}
         </div>
 

@@ -24,7 +24,7 @@ export default function Register() {
     try {
       const { token, user } = await registerUser(name, email, password);
       login(token, user);
-      navigate('/');
+      navigate('/inicio'); // ← cambiado
     } catch (err: any) {
       setError(err.message || 'Error al registrarse.');
     } finally {
@@ -36,17 +36,28 @@ export default function Register() {
     <div className="min-h-screen bg-neutral-950 flex items-center justify-center px-6">
       <div className="w-full max-w-md">
 
-        {/* Logo */}
+        {/* Logo clickeable */}
         <div className="text-center mb-8">
-          <h1 className="font-display font-extrabold text-4xl text-white">
+          <button
+            onClick={() => navigate('/')}
+            className="font-display font-extrabold text-4xl text-white hover:opacity-80 transition-opacity"
+          >
             Stream<span className="text-brand-500">Match</span>
-          </h1>
+          </button>
           <p className="text-neutral-400 mt-2 font-body">Crea tu cuenta gratis</p>
         </div>
 
         {/* Card */}
         <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-8 space-y-5">
-          <h2 className="font-display font-bold text-white text-xl">Registro</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="font-display font-bold text-white text-xl">Registro</h2>
+            <button
+              onClick={() => navigate('/')}
+              className="text-neutral-500 hover:text-white text-sm transition-colors"
+            >
+              ← Volver
+            </button>
+          </div>
 
           {error && (
             <div className="bg-red-950/50 border border-red-800 rounded-xl px-4 py-3 text-red-400 text-sm">
