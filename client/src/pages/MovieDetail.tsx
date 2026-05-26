@@ -4,6 +4,7 @@ import { fetchMovieById, fetchSimilarMovies } from '../services/recommendations.
 import { Movie } from '../types';
 import StarRating from '../components/StarRating';
 import FavoriteButton from '../components/FavoriteButton';
+import Comments from '../components/Comments';
 
 const GENRE_TRANSLATIONS: Record<string, string> = {
   'Action': 'Acción', 'Adventure': 'Aventura', 'Animation': 'Animación',
@@ -48,7 +49,6 @@ export default function MovieDetail() {
       .then((m) => {
         setMovie(m);
 
-        // Busca el rating real de TMDB
         fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${import.meta.env.VITE_TMDB_KEY}&language=es-ES`)
           .then((r) => r.json())
           .then((data) => {
@@ -168,11 +168,7 @@ export default function MovieDetail() {
 
             {/* Ratings */}
             <div className="flex flex-col gap-4 pt-2">
-
-              {/* Fila de ratings */}
               <div className="flex flex-wrap items-center gap-3">
-
-                {/* Rating de la comunidad StreamMatch */}
                 <div className="bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 flex items-center gap-2">
                   <span className="text-yellow-400 text-lg">★</span>
                   <div>
@@ -185,7 +181,6 @@ export default function MovieDetail() {
                   </div>
                 </div>
 
-                {/* Rating de TMDB */}
                 {tmdbRating && (
                   <div className="bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 flex items-center gap-2">
                     <span className="text-blue-400 text-lg">★</span>
@@ -203,14 +198,13 @@ export default function MovieDetail() {
                 <FavoriteButton movie={movie} />
 
                 <button
-                  onClick={() => navigate('/')}
+                  onClick={() => navigate('/inicio')}
                   className="btn-primary text-sm"
                 >
                   ✦ Ver más recomendaciones
                 </button>
               </div>
 
-              {/* Rating con estrellas */}
               <div className="bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3">
                 <StarRating
                   movieId={movie.id}
@@ -267,6 +261,10 @@ export default function MovieDetail() {
             </div>
           </section>
         )}
+
+        {/* ── Comentarios ──────────────────────────────────── */}
+        <Comments movieId={movie.id} />
+
       </main>
     </div>
   );

@@ -7,9 +7,9 @@ import {
   searchTMDB,
   addRating,
   getUserProfile,
+  getSimilarMovies,
 } from '../controllers/recommendation.controller';
 import { chatWithAI } from '../controllers/chat.controller';
-import { getSimilarMovies } from '../controllers/recommendation.controller';
 import { register, login } from '../controllers/auth.controller';
 import {
   addFavorite,
@@ -18,6 +18,11 @@ import {
   checkFavorite,
   getFavoriteRecommendations,
 } from '../controllers/favorites.controller';
+import {
+  getComments,
+  addComment,
+  deleteComment,
+} from '../controllers/comments.controller';
 
 const router = Router();
 
@@ -31,8 +36,8 @@ router.post('/chat', chatWithAI);
 router.get('/movies', getAllMovies);
 router.get('/genres', getGenres);
 router.get('/movies/:id', getMovieById);
-router.get('/search', searchTMDB);
 router.get('/movies/:id/similar', getSimilarMovies);
+router.get('/search', searchTMDB);
 
 // Ratings
 router.post('/ratings', addRating);
@@ -51,6 +56,12 @@ router.delete('/favorites', removeFavorite);
 router.get('/favorites/:userId', getFavorites);
 router.get('/favorites/check/:userId/:movieId', checkFavorite);
 router.post('/favorites/recommendations', getFavoriteRecommendations);
+router.post('/comments/:id/delete', deleteComment);
+
+// Comentarios
+router.get('/comments/:movieId', getComments);
+router.post('/comments', addComment);
+router.delete('/comments/:id', deleteComment);
 
 // Health check
 router.get('/health', (_req, res) => {
