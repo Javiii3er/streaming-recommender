@@ -33,6 +33,7 @@ export default function MovieDetail() {
   const navigate = useNavigate();
   const [movie, setMovie] = useState<Movie | null>(null);
   const [similar, setSimilar] = useState<Movie[]>([]);
+  const [tmdbRating, setTmdbRating] = useState<{ score: number; count: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -41,10 +42,25 @@ export default function MovieDetail() {
     setLoading(true);
     setMovie(null);
     setSimilar([]);
+    setTmdbRating(null);
 
     fetchMovieById(Number(id))
       .then((m) => {
         setMovie(m);
+
+        // Busca el rating real de TMDB
+        fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${import.meta.env.VITE_TMDB_KEY}&language=es-ES`)
+          .then((r) => r.json())
+          .then((data) => {
+            if (data.vote_average) {
+              setTmdbRating({
+                score: Math.round(data.vote_average * 10) / 10,
+                count: data.vote_count || 0,
+              });
+            }
+          })
+          .catch(() => {});
+
         return fetchSimilarMovies(Number(id));
       })
       .then(setSimilar)
@@ -93,7 +109,6 @@ export default function MovieDetail() {
           </div>
         )}
 
-        {/* Botón volver */}
         <button
           onClick={() => navigate(-1)}
           className="absolute top-6 left-6 bg-black/50 backdrop-blur-sm border border-neutral-700
@@ -130,7 +145,7 @@ export default function MovieDetail() {
               )}
             </div>
 
-            {/* Géneros en español */}
+            {/* Géneros */}
             <div className="flex flex-wrap gap-2">
               {genres.map((genre) => (
                 <span
@@ -151,9 +166,13 @@ export default function MovieDetail() {
               </p>
             )}
 
-            {/* Rating + Favorito + Estrellas */}
+            {/* Ratings */}
             <div className="flex flex-col gap-4 pt-2">
+
+              {/* Fila de ratings */}
               <div className="flex flex-wrap items-center gap-3">
+
+                {/* Rating de la comunidad StreamMatch */}
                 <div className="bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 flex items-center gap-2">
                   <span className="text-yellow-400 text-lg">★</span>
                   <div>
@@ -161,10 +180,25 @@ export default function MovieDetail() {
                       {Number((movie as any).avg_rating || 0).toFixed(1)}
                     </p>
                     <p className="text-neutral-500 text-xs">
-                      {(movie as any).rating_count || 0} valoraciones
+                      {(movie as any).rating_count || 0} en StreamMatch
                     </p>
                   </div>
                 </div>
+
+                {/* Rating de TMDB */}
+                {tmdbRating && (
+                  <div className="bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 flex items-center gap-2">
+                    <span className="text-blue-400 text-lg">★</span>
+                    <div>
+                      <p className="text-white font-display font-bold text-lg leading-none">
+                        {tmdbRating.score}
+                      </p>
+                      <p className="text-neutral-500 text-xs">
+                        {tmdbRating.count.toLocaleString()} en TMDB
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 <FavoriteButton movie={movie} />
 
@@ -176,6 +210,7 @@ export default function MovieDetail() {
                 </button>
               </div>
 
+              {/* Rating con estrellas */}
               <div className="bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3">
                 <StarRating
                   movieId={movie.id}

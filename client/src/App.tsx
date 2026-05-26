@@ -7,6 +7,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
 import Favorites from './pages/Favorites';
+import NotFound from './pages/NotFound';
 import ChatBot from './components/ChatBot';
 import PrivateRoute from './components/PrivateRoute';
 
@@ -36,6 +37,9 @@ export default function App() {
           <Route path="/favoritos" element={
             <PrivateRoute><Favorites /></PrivateRoute>
           } />
+
+          {/* Página 404 */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
       <ChatBot />
